@@ -486,6 +486,59 @@ function renderAll() {
   renderMainAction();
 }
 
+/* ---- IndexedDB payload cache (survives cold boot) ---- */
+
+var idb = null;
+function openPayloadDB(cb) {
+  if (idb) { cb(idb); return; }
+  try {
+    var req = indexedDB.open("shadow-payloads", 1);
+    req.onupgradeneeded = function () { req.result.createObjectStore("bins"); };
+    req.onsuccess = function () { idb = req.result; cb(idb); };
+    req.onerror = function () { cb(null); };
+  } catch (e) { cb(null); }
+}
+
+function cachePayloadToDB(file) {
+  try {
+    var xhr = new XMLHttpRequest();
+    xhr.open("GET", file, true);
+    xhr.responseType = "arraybuffer";
+    xhr.onload = function () {
+      if (xhr.status >= 200 && xhr.status < 300 && xhr.response) {
+        openPayloadDB(function (db) {
+          if (!db) return;
+          try {
+            var tx = db.transaction("bins", "readwrite");
+            tx.objectStore("bins").put(xhr.response, file);
+          } catch (e) {}
+        });
+      }
+    };
+    xhr.send();
+  } catch (e) {}
+}
+
+function cacheAllPayloads() {
+  for (var i = 0; i < PAYLOADS.length; i++) {
+    if (PAYLOADS[i].cat === "utility") {
+      cachePayloadToDB(PAYLOADS[i].file);
+    }
+  }
+}
+
+function getPayloadFromDB(file, cb) {
+  openPayloadDB(function (db) {
+    if (!db) { cb(null); return; }
+    try {
+      var tx = db.transaction("bins", "readonly");
+      var req = tx.objectStore("bins").get(file);
+      req.onsuccess = function () { cb(req.result || null); };
+      req.onerror = function () { cb(null); };
+    } catch (e) { cb(null); }
+  });
+}
+
 /* ---- actions ---- */
 
 function getExploit(id) {
@@ -523,32 +576,63 @@ function showPayloadFail(btn, origText, msg) {
   }, 5000);
 }
 
+function sendToBinLoader(data, btn, origText) {
+  var sendXhr = new XMLHttpRequest();
+  sendXhr.open("POST", "/api/send-payload-bin", true);
+  sendXhr.timeout = 5000;
+  sendXhr.setRequestHeader("Content-Type", "application/octet-stream");
+  sendXhr.onload = function () {
+    try {
+      var r = JSON.parse(sendXhr.responseText);
+      if (r.ok) { showPayloadOk(btn, origText); }
+      else { showPayloadFail(btn, origText, r.error || "send failed"); }
+    } catch (e) { showPayloadFail(btn, origText, "bad response"); }
+  };
+  sendXhr.onerror = function () {
+    tryLocalhost(data, btn, origText);
+  };
+  sendXhr.ontimeout = function () {
+    tryLocalhost(data, btn, origText);
+  };
+  sendXhr.send(new Uint8Array(data));
+}
+
+function tryLocalhost(data, btn, origText) {
+  var lx = new XMLHttpRequest();
+  lx.open("POST", "http://127.0.0.1:9090/", true);
+  lx.timeout = 5000;
+  lx.onload = function () { showPayloadOk(btn, origText); };
+  lx.onerror = function () { showPayloadFail(btn, origText, "server offline — use serve.py"); };
+  lx.ontimeout = function () { showPayloadFail(btn, origText, "timeout"); };
+  try { lx.send(new Uint8Array(data)); } catch (e) { showPayloadFail(btn, origText, "blocked"); }
+}
+
 function sendPayloadDirect(file, btn, origText) {
   var fetchXhr = new XMLHttpRequest();
   fetchXhr.open("GET", file, true);
   fetchXhr.responseType = "arraybuffer";
   fetchXhr.onload = function () {
-    if (fetchXhr.status < 200 || fetchXhr.status >= 300) {
-      showPayloadFail(btn, origText, "cached file missing");
+    if (fetchXhr.status >= 200 && fetchXhr.status < 300 && fetchXhr.response) {
+      sendToBinLoader(fetchXhr.response, btn, origText);
       return;
     }
-    var data = fetchXhr.response;
-    var sendXhr = new XMLHttpRequest();
-    sendXhr.open("POST", "/api/send-payload-bin", true);
-    sendXhr.timeout = 10000;
-    sendXhr.setRequestHeader("Content-Type", "application/octet-stream");
-    sendXhr.onload = function () {
-      try {
-        var r = JSON.parse(sendXhr.responseText);
-        if (r.ok) { showPayloadOk(btn, origText); }
-        else { showPayloadFail(btn, origText, r.error || "send failed"); }
-      } catch (e) { showPayloadFail(btn, origText, "bad response"); }
-    };
-    sendXhr.onerror = function () { showPayloadFail(btn, origText, "server unreachable"); };
-    sendXhr.ontimeout = function () { showPayloadFail(btn, origText, "timeout"); };
-    sendXhr.send(new Uint8Array(data));
+    getPayloadFromDB(file, function (cached) {
+      if (cached) {
+        sendToBinLoader(cached, btn, origText);
+      } else {
+        showPayloadFail(btn, origText, "payload not cached");
+      }
+    });
   };
-  fetchXhr.onerror = function () { showPayloadFail(btn, origText, "payload not cached"); };
+  fetchXhr.onerror = function () {
+    getPayloadFromDB(file, function (cached) {
+      if (cached) {
+        sendToBinLoader(cached, btn, origText);
+      } else {
+        showPayloadFail(btn, origText, "payload not cached");
+      }
+    });
+  };
   fetchXhr.send();
 }
 
@@ -648,6 +732,7 @@ function init() {
   }
 
   renderAll();
+  cacheAllPayloads();
 
   if (detectedFW !== null && selectedExploit && selectedPayload && !isJailbroken) {
     startClock();
