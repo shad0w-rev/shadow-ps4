@@ -112,7 +112,7 @@ function renderStatus() {
 function renderPS5View(zone) {
   var info = document.createElement("div");
   info.className = "auto-info";
-  info.innerHTML = '<span class="auto-label" style="color:#0a84ff">PS5 Detected</span>' +
+  info.innerHTML = '<span class="auto-label" style="color:rgba(255,255,255,0.85)">PS5 Detected</span>' +
     '<span class="auto-value">Firmware ' + fwString(detectedFW) + '</span>';
   zone.appendChild(info);
 
