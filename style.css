@@ -1,0 +1,387 @@
+/* Shadow — iOS Glass UI with wallpaper */
+
+:root {
+  --glass: rgba(15, 15, 35, 0.82);
+  --glass-hi: rgba(25, 25, 50, 0.88);
+  --glass-border: rgba(255, 255, 255, 0.15);
+  --glass-border-hi: rgba(255, 255, 255, 0.25);
+  --glass-blur: 24px;
+
+  --text: rgba(255, 255, 255, 0.85);
+  --bright: #ffffff;
+  --secondary: rgba(255, 255, 255, 0.55);
+  --tertiary: rgba(255, 255, 255, 0.30);
+  --dim: rgba(255, 255, 255, 0.18);
+
+  --blue: #0a84ff;
+  --green: #30d158;
+  --orange: #ff9f0a;
+  --red: #ff453a;
+  --teal: #64d2ff;
+  --purple: #bf5af2;
+
+  --selected-bg: rgba(10, 132, 255, 0.15);
+  --selected-border: rgba(10, 132, 255, 0.40);
+
+  --font: -apple-system, "SF Pro Display", "Segoe UI", system-ui, sans-serif;
+  --mono: "SF Mono", Consolas, "DejaVu Sans Mono", monospace;
+  --r: 14px;
+  --r-sm: 10px;
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+html, body {
+  min-height: 100vh;
+  font: 14px/1.5 var(--font);
+  color: var(--text);
+  -webkit-font-smoothing: antialiased;
+}
+
+body {
+  background: #050510 url('shadow.png') center center / cover no-repeat fixed;
+}
+
+.shell {
+  max-width: 520px;
+  margin: 0 auto;
+  padding: 0 16px 48px;
+}
+
+/* ---- header ---- */
+.top-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 20px 0 16px;
+}
+
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.brand-mark svg { display: block; }
+
+.brand-name {
+  font-size: 24px;
+  font-weight: 700;
+  color: var(--bright);
+  letter-spacing: -0.02em;
+}
+
+.brand-sub {
+  display: block;
+  font: 500 11px/1 var(--font);
+  color: var(--secondary);
+  letter-spacing: 0.02em;
+  margin-top: 2px;
+}
+
+/* firmware indicator */
+.fw-indicator {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 14px;
+  border-radius: 20px;
+  background: var(--glass);
+  -webkit-backdrop-filter: blur(var(--glass-blur));
+  backdrop-filter: blur(var(--glass-blur));
+  border: 1px solid var(--glass-border);
+  font: 600 11px/1.2 var(--font);
+  color: var(--secondary);
+}
+
+.fw-dot {
+  width: 7px; height: 7px;
+  border-radius: 50%;
+  background: var(--orange);
+  box-shadow: 0 0 8px rgba(255, 159, 10, 0.6);
+  flex-shrink: 0;
+}
+
+.fw-indicator.detected .fw-dot {
+  background: var(--blue);
+  box-shadow: 0 0 8px rgba(10, 132, 255, 0.6);
+}
+
+.fw-indicator.jailbroken {
+  border-color: rgba(48, 209, 88, 0.30);
+  background: rgba(48, 209, 88, 0.10);
+}
+
+.fw-indicator.jailbroken .fw-dot {
+  background: var(--green);
+  box-shadow: 0 0 10px rgba(48, 209, 88, 0.7);
+}
+
+.fw-indicator.jailbroken .fw-label {
+  color: var(--green);
+  font-weight: 700;
+}
+
+.fw-indicator .fw-ver {
+  color: var(--blue);
+  font-weight: 700;
+}
+
+/* ---- main action area ---- */
+.auto-info {
+  text-align: center;
+  margin-bottom: 16px;
+  padding: 16px 20px;
+  background: var(--glass);
+  -webkit-backdrop-filter: blur(var(--glass-blur));
+  backdrop-filter: blur(var(--glass-blur));
+  border: 1px solid var(--glass-border);
+  border-radius: var(--r);
+}
+
+.auto-label {
+  display: block;
+  font: 500 11px/1 var(--font);
+  color: var(--secondary);
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  margin-bottom: 6px;
+}
+
+.auto-value {
+  font: 600 15px/1.3 var(--font);
+  color: var(--bright);
+}
+
+/* launch button */
+.go-btn {
+  display: block;
+  width: 100%;
+  padding: 18px 24px;
+  border: none;
+  border-radius: var(--r);
+  background: var(--blue);
+  color: var(--bright);
+  font: 600 16px/1 var(--font);
+  cursor: pointer;
+  transition: filter 0.15s, box-shadow 0.15s;
+}
+
+.go-btn:hover {
+  filter: brightness(1.15);
+  box-shadow: 0 4px 30px rgba(10, 132, 255, 0.40);
+}
+
+.go-btn:active {
+  filter: brightness(0.92);
+}
+
+.go-btn:disabled {
+  background: var(--glass);
+  color: var(--tertiary);
+  cursor: not-allowed;
+  box-shadow: none;
+  filter: none;
+  border: 1px solid var(--glass-border);
+}
+
+/* advanced options button */
+.adv-btn {
+  display: block;
+  width: 100%;
+  margin-top: 12px;
+  padding: 10px;
+  border: none;
+  border-radius: var(--r-sm);
+  background: transparent;
+  color: var(--secondary);
+  font: 500 13px/1 var(--font);
+  cursor: pointer;
+  transition: color 0.15s;
+}
+
+.adv-btn:hover {
+  color: var(--bright);
+}
+
+/* countdown */
+.countdown {
+  margin-top: 10px;
+  min-height: 1.4em;
+  text-align: center;
+  font: 500 14px/1.2 var(--font);
+  color: var(--blue);
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
+}
+
+.countdown:not(:empty) {
+  animation: pulse 1.6s ease-in-out infinite;
+}
+
+/* ---- panels (advanced mode) ---- */
+.panels {
+  display: flex;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.panel {
+  flex: 1;
+  min-width: 0;
+  background: var(--glass);
+  -webkit-backdrop-filter: blur(var(--glass-blur));
+  backdrop-filter: blur(var(--glass-blur));
+  border: 1px solid var(--glass-border);
+  border-radius: var(--r);
+  padding: 14px;
+}
+
+.panel-heading {
+  font: 600 13px/1 var(--font);
+  color: var(--secondary);
+  letter-spacing: 0.01em;
+  padding-bottom: 10px;
+  margin-bottom: 10px;
+  border-bottom: 1px solid var(--dim);
+}
+
+/* ---- option cards ---- */
+.option-list .card {
+  position: relative;
+  display: block;
+  width: 100%;
+  margin-bottom: 6px;
+  padding: 10px 12px;
+  border: 1px solid transparent;
+  border-radius: var(--r-sm);
+  background: rgba(15, 15, 35, 0.75);
+  cursor: pointer;
+  transition: background 0.2s, border-color 0.2s;
+  text-align: left;
+}
+
+.option-list .card:hover {
+  background: rgba(25, 25, 50, 0.85);
+  border-color: var(--glass-border);
+}
+
+.option-list .card input[type="radio"] {
+  position: absolute;
+  opacity: 0;
+  width: 0; height: 0;
+}
+
+.option-list .card.selected {
+  background: var(--selected-bg);
+  border-color: var(--selected-border);
+}
+
+.option-list .card.disabled {
+  opacity: 0.25;
+  pointer-events: none;
+}
+
+.card-header {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+  margin-bottom: 2px;
+}
+
+.card-name {
+  font: 600 13px/1.2 var(--font);
+  color: var(--bright);
+}
+
+.card-badge {
+  padding: 2px 7px;
+  border-radius: 6px;
+  font: 500 10px/1.4 var(--font);
+}
+
+.badge-fw {
+  background: rgba(255, 159, 10, 0.15);
+  color: var(--orange);
+}
+
+.badge-ok {
+  background: rgba(48, 209, 88, 0.15);
+  color: var(--green);
+}
+
+.badge-unavail {
+  background: rgba(255, 69, 58, 0.15);
+  color: var(--red);
+}
+
+.card-desc {
+  font: 400 11px/1.3 var(--font);
+  color: var(--secondary);
+}
+
+.action-bar {
+  text-align: center;
+}
+
+/* ---- credits ---- */
+.scene-credits {
+  margin-top: 32px;
+  padding: 20px;
+  background: var(--glass);
+  -webkit-backdrop-filter: blur(var(--glass-blur));
+  backdrop-filter: blur(var(--glass-blur));
+  border: 1px solid var(--glass-border);
+  border-radius: var(--r);
+}
+
+.credits-heading {
+  font: 600 12px/1 var(--font);
+  color: var(--tertiary);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  text-align: center;
+  margin-bottom: 14px;
+}
+
+.credits-list {
+  list-style: none;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 2px 12px;
+}
+
+.credits-list li {
+  padding: 6px 8px;
+  border-radius: var(--r-sm);
+  font: 400 11px/1.35 var(--font);
+  color: var(--secondary);
+}
+
+.credits-list li strong {
+  display: block;
+  font: 600 12px/1.3 var(--font);
+  color: var(--text);
+}
+
+.credits-tagline {
+  text-align: center;
+  margin-top: 14px;
+  font: 500 11px/1.4 var(--font);
+  color: var(--tertiary);
+}
+
+/* ---- responsive ---- */
+@media (max-width: 500px) {
+  .panels {
+    flex-direction: column;
+    gap: 12px;
+  }
+  .credits-list {
+    grid-template-columns: 1fr;
+  }
+}

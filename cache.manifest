@@ -1,0 +1,15 @@
+CACHE MANIFEST
+# Shadow — Main landing page v13.0
+
+CACHE:
+index.html
+style.css
+shadow.js
+shadow.png
+payloads/disable-updates.bin
+payloads/enable-updates.bin
+payloads/fan-threshold.bin
+payloads/disable-aslr.bin
+
+NETWORK:
+*
