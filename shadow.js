@@ -1,6 +1,7 @@
 /* Shadow — PS4 Exploit Host
    Smart flow: auto-detect FW, auto-pick exploit, auto-launch GoldHEN.
-   After jailbreak: show utility payload options. */
+   No server needed — runs entirely from GitHub Pages.
+   Utility payloads sent via native TCP from the jailbreak page. */
 
 var EXPLOITS = [
   { id: "cssfontface", name: "CSSFontFace", desc: "WebKit UAF + Lapse kernel", fwMin: 600, fwMax: 1102, fwLabel: "6.00 – 11.02", runner: "exploits/cssfontface/", platform: "ps4" },
@@ -262,22 +263,11 @@ function renderJailbrokenView(zone) {
     utilPanel.style.marginTop = "8px";
     utilPanel.innerHTML = '<span class="auto-label">Utility Payloads</span>';
     var utilList = document.createElement("div");
-    utilList.style.marginTop = "8px";
-
+    utilList.style.cssText = "margin-top:8px;font:400 12px/1.6 var(--font);color:var(--secondary)";
     for (var u = 0; u < utilities.length; u++) {
-      (function (pl) {
-        var plBtn = document.createElement("button");
-        plBtn.className = "go-btn";
-        plBtn.style.cssText = "margin-top:6px;padding:14px 16px;font-size:14px";
-        plBtn.textContent = pl.name + " — " + pl.desc;
-        plBtn.setAttribute("data-id", pl.id);
-        plBtn.addEventListener("click", function (e) {
-          e.preventDefault();
-          sendPayload(pl.file, this);
-        });
-        utilList.appendChild(plBtn);
-      })(utilities[u]);
+      utilList.innerHTML += "&#10003; " + utilities[u].name + " — " + utilities[u].desc + "<br>";
     }
+    utilList.innerHTML += '<span style="display:block;margin-top:8px;color:rgba(255,255,255,0.35);font-size:11px">Send from the jailbreak page after exploit runs</span>';
     utilPanel.appendChild(utilList);
     zone.appendChild(utilPanel);
   }
@@ -555,128 +545,9 @@ function getPayload(id) {
   return null;
 }
 
-function showPayloadOk(btn, origText) {
-  btn.textContent = "[OK] " + origText;
-  btn.style.borderColor = "rgba(48,209,88,0.5)";
-  btn.style.background = "rgba(48,209,88,0.12)";
-  btn.style.opacity = "1";
-  btn.disabled = false;
-}
-
-function showPayloadFail(btn, origText, msg) {
-  btn.textContent = "[FAIL] " + (msg || "unknown");
-  btn.style.borderColor = "rgba(255,69,58,0.5)";
-  btn.style.background = "rgba(255,69,58,0.12)";
-  btn.style.opacity = "1";
-  btn.disabled = false;
-  setTimeout(function () {
-    btn.textContent = origText;
-    btn.style.borderColor = "";
-    btn.style.background = "";
-  }, 5000);
-}
-
-function sendToBinLoader(data, btn, origText) {
-  var sendXhr = new XMLHttpRequest();
-  sendXhr.open("POST", "/api/send-payload-bin", true);
-  sendXhr.timeout = 5000;
-  sendXhr.setRequestHeader("Content-Type", "application/octet-stream");
-  sendXhr.onload = function () {
-    try {
-      var r = JSON.parse(sendXhr.responseText);
-      if (r.ok) { showPayloadOk(btn, origText); }
-      else { showPayloadFail(btn, origText, r.error || "send failed"); }
-    } catch (e) { showPayloadFail(btn, origText, "bad response"); }
-  };
-  sendXhr.onerror = function () {
-    tryLocalhost(data, btn, origText);
-  };
-  sendXhr.ontimeout = function () {
-    tryLocalhost(data, btn, origText);
-  };
-  sendXhr.send(new Uint8Array(data));
-}
-
-function tryLocalhost(data, btn, origText) {
-  var lx = new XMLHttpRequest();
-  lx.open("POST", "http://127.0.0.1:9090/", true);
-  lx.timeout = 5000;
-  lx.onload = function () { showPayloadOk(btn, origText); };
-  lx.onerror = function () { showPayloadFail(btn, origText, "server offline — use serve.py"); };
-  lx.ontimeout = function () { showPayloadFail(btn, origText, "timeout"); };
-  try { lx.send(new Uint8Array(data)); } catch (e) { showPayloadFail(btn, origText, "blocked"); }
-}
-
-function sendPayloadDirect(file, btn, origText) {
-  var fetchXhr = new XMLHttpRequest();
-  fetchXhr.open("GET", file, true);
-  fetchXhr.responseType = "arraybuffer";
-  fetchXhr.onload = function () {
-    if (fetchXhr.status >= 200 && fetchXhr.status < 300 && fetchXhr.response) {
-      sendToBinLoader(fetchXhr.response, btn, origText);
-      return;
-    }
-    getPayloadFromDB(file, function (cached) {
-      if (cached) {
-        sendToBinLoader(cached, btn, origText);
-      } else {
-        showPayloadFail(btn, origText, "payload not cached");
-      }
-    });
-  };
-  fetchXhr.onerror = function () {
-    getPayloadFromDB(file, function (cached) {
-      if (cached) {
-        sendToBinLoader(cached, btn, origText);
-      } else {
-        showPayloadFail(btn, origText, "payload not cached");
-      }
-    });
-  };
-  fetchXhr.send();
-}
-
-function sendPayload(file, btn) {
-  var origText = btn.textContent;
-  btn.textContent = "Sending...";
-  btn.disabled = true;
-  btn.style.opacity = "0.6";
-  try {
-    var xhr = new XMLHttpRequest();
-    xhr.open("POST", "/api/send-payload", true);
-    xhr.timeout = 10000;
-    xhr.setRequestHeader("Content-Type", "application/json");
-    xhr.onload = function () {
-      try {
-        var r = JSON.parse(xhr.responseText);
-        if (r.ok) { showPayloadOk(btn, origText); }
-        else {
-          if (r.error && r.error.indexOf("not found") !== -1) {
-            sendPayloadDirect(file, btn, origText);
-          } else {
-            showPayloadFail(btn, origText, r.error || "unknown");
-          }
-        }
-      } catch (e) {
-        btn.textContent = "[ERROR] Bad response";
-        btn.style.opacity = "1";
-        btn.disabled = false;
-        setTimeout(function () { btn.textContent = origText; }, 5000);
-      }
-    };
-    xhr.onerror = function () {
-      sendPayloadDirect(file, btn, origText);
-    };
-    xhr.ontimeout = function () {
-      sendPayloadDirect(file, btn, origText);
-    };
-    xhr.send(JSON.stringify({ file: file }));
-  } catch (e) {
-    btn.textContent = origText;
-    btn.style.opacity = "1";
-    btn.disabled = false;
-  }
-}
+/* Payload sending removed — utility payloads are sent directly to
+   BinLoader via native TCP from the jailbreak page (jb.html) using
+   the exploit's syscall primitives. No server needed. */
 
 function startExploit() {
   stopClock();
