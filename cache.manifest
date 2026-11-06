@@ -1,11 +1,14 @@
 CACHE MANIFEST
-# Shadow — Main landing page v15.0
+# Shadow — Main landing page v16.0
 
 CACHE:
 index.html
 style.css
 shadow.js
 shadow.png
+payload-manager.html
+payloads/goldhen.bin
+payloads/hen.bin
 payloads/disable-updates.bin
 payloads/enable-updates.bin
 payloads/fan-threshold.bin

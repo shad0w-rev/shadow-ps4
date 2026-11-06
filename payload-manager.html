@@ -1,0 +1,669 @@
+<!doctype html>
+<html lang="en" manifest="cache.manifest">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Shadow — Payload Manager</title>
+    <style>
+      *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+      html, body {
+        min-height: 100vh;
+        font: 14px/1.5 -apple-system, "SF Pro Display", "Segoe UI", system-ui, sans-serif;
+        color: rgba(255, 255, 255, 0.85);
+        -webkit-font-smoothing: antialiased;
+      }
+      body {
+        background: #050510 url('shadow.png') center center / cover no-repeat fixed;
+      }
+      .shell {
+        max-width: 520px;
+        margin: 0 auto;
+        padding: 0 16px 48px;
+      }
+      .top-bar {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 20px 0 16px;
+      }
+      .brand {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+      }
+      .brand h1 {
+        font: 700 22px/1.1 -apple-system, "SF Pro Display", "Segoe UI", system-ui, sans-serif;
+        color: #fff;
+        letter-spacing: -0.02em;
+      }
+      .brand h1 i { font-style: normal; color: rgba(255,255,255,0.5); }
+      .brand-sub {
+        font: 500 11px/1 -apple-system, "SF Pro Display", "Segoe UI", system-ui, sans-serif;
+        color: rgba(255, 255, 255, 0.55);
+        margin-top: 2px;
+      }
+      .back-link {
+        padding: 6px 14px;
+        border-radius: 20px;
+        background: rgba(15, 15, 35, 0.82);
+        border: 1px solid rgba(255, 255, 255, 0.12);
+        font: 500 11px/1.2 -apple-system, "SF Pro Display", "Segoe UI", system-ui, sans-serif;
+        color: rgba(255, 255, 255, 0.55);
+        text-decoration: none;
+        transition: border-color 0.15s, color 0.15s;
+      }
+      .back-link:hover {
+        border-color: rgba(255, 255, 255, 0.30);
+        color: rgba(255, 255, 255, 0.85);
+      }
+
+      /* stats bar */
+      .stats {
+        display: flex;
+        gap: 8px;
+        margin-bottom: 16px;
+      }
+      .stat {
+        flex: 1;
+        text-align: center;
+        padding: 12px 10px;
+        background: rgba(15, 15, 35, 0.82);
+        border: 1px solid rgba(255, 255, 255, 0.10);
+        border-radius: 14px;
+      }
+      .stat-val {
+        font: 700 18px/1 -apple-system, "SF Pro Display", "Segoe UI", system-ui, sans-serif;
+        color: #fff;
+      }
+      .stat-label {
+        font: 500 10px/1 -apple-system, "SF Pro Display", "Segoe UI", system-ui, sans-serif;
+        color: rgba(255, 255, 255, 0.40);
+        text-transform: uppercase;
+        letter-spacing: 0.04em;
+        margin-top: 4px;
+      }
+
+      /* section */
+      .section {
+        margin-bottom: 16px;
+        background: rgba(15, 15, 35, 0.82);
+        border: 1px solid rgba(255, 255, 255, 0.10);
+        border-radius: 14px;
+        padding: 16px;
+      }
+      .section-head {
+        font: 600 12px/1 -apple-system, "SF Pro Display", "Segoe UI", system-ui, sans-serif;
+        color: rgba(255, 255, 255, 0.40);
+        text-transform: uppercase;
+        letter-spacing: 0.04em;
+        margin-bottom: 12px;
+      }
+
+      /* payload row */
+      .pl-row {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 10px 12px;
+        border-radius: 10px;
+        margin-bottom: 6px;
+        background: rgba(15, 15, 35, 0.6);
+        border: 1px solid transparent;
+        transition: border-color 0.15s;
+      }
+      .pl-row:last-child { margin-bottom: 0; }
+      .pl-row:hover { border-color: rgba(255, 255, 255, 0.10); }
+      .pl-icon {
+        width: 32px; height: 32px;
+        border-radius: 8px;
+        display: flex; align-items: center; justify-content: center;
+        font-size: 14px;
+        flex-shrink: 0;
+      }
+      .pl-icon.cached { background: rgba(48, 209, 88, 0.15); color: #30d158; }
+      .pl-icon.missing { background: rgba(255, 159, 10, 0.15); color: #ff9f0a; }
+      .pl-icon.custom { background: rgba(191, 90, 242, 0.15); color: #bf5af2; }
+      .pl-info { flex: 1; min-width: 0; }
+      .pl-name {
+        font: 600 13px/1.2 -apple-system, "SF Pro Display", "Segoe UI", system-ui, sans-serif;
+        color: #fff;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+      .pl-detail {
+        font: 400 11px/1.3 -apple-system, "SF Pro Display", "Segoe UI", system-ui, sans-serif;
+        color: rgba(255, 255, 255, 0.45);
+      }
+      .pl-actions { display: flex; gap: 6px; flex-shrink: 0; }
+      .pl-btn {
+        padding: 6px 12px;
+        border-radius: 8px;
+        border: 1px solid rgba(255, 255, 255, 0.12);
+        background: rgba(255, 255, 255, 0.06);
+        color: rgba(255, 255, 255, 0.75);
+        font: 500 11px/1 -apple-system, "SF Pro Display", "Segoe UI", system-ui, sans-serif;
+        cursor: pointer;
+        transition: background 0.15s, border-color 0.15s;
+      }
+      .pl-btn:hover {
+        background: rgba(255, 255, 255, 0.12);
+        border-color: rgba(255, 255, 255, 0.25);
+      }
+      .pl-btn.danger { color: #ff453a; border-color: rgba(255, 69, 58, 0.25); }
+      .pl-btn.danger:hover { background: rgba(255, 69, 58, 0.12); }
+      .pl-btn:disabled { opacity: 0.35; cursor: not-allowed; }
+
+      /* cache all button */
+      .cache-all-btn {
+        display: block;
+        width: 100%;
+        padding: 14px;
+        margin-top: 12px;
+        border: 1px solid rgba(255, 255, 255, 0.15);
+        border-radius: 10px;
+        background: rgba(255, 255, 255, 0.08);
+        color: #fff;
+        font: 500 13px/1 -apple-system, "SF Pro Display", "Segoe UI", system-ui, sans-serif;
+        cursor: pointer;
+        transition: background 0.15s, border-color 0.15s;
+      }
+      .cache-all-btn:hover {
+        background: rgba(255, 255, 255, 0.14);
+        border-color: rgba(255, 255, 255, 0.30);
+      }
+      .cache-all-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+
+      /* upload zone */
+      .upload-zone {
+        border: 2px dashed rgba(255, 255, 255, 0.15);
+        border-radius: 12px;
+        padding: 24px 16px;
+        text-align: center;
+        cursor: pointer;
+        transition: border-color 0.2s, background 0.2s;
+      }
+      .upload-zone:hover, .upload-zone.dragover {
+        border-color: rgba(255, 255, 255, 0.35);
+        background: rgba(255, 255, 255, 0.04);
+      }
+      .upload-zone-text {
+        font: 500 13px/1.4 -apple-system, "SF Pro Display", "Segoe UI", system-ui, sans-serif;
+        color: rgba(255, 255, 255, 0.55);
+      }
+      .upload-zone-sub {
+        font: 400 11px/1.3 -apple-system, "SF Pro Display", "Segoe UI", system-ui, sans-serif;
+        color: rgba(255, 255, 255, 0.30);
+        margin-top: 4px;
+      }
+      #file-input { display: none; }
+
+      /* clear all */
+      .clear-btn {
+        display: block;
+        width: 100%;
+        margin-top: 16px;
+        padding: 10px;
+        border: none;
+        border-radius: 10px;
+        background: transparent;
+        color: rgba(255, 69, 58, 0.6);
+        font: 500 12px/1 -apple-system, "SF Pro Display", "Segoe UI", system-ui, sans-serif;
+        cursor: pointer;
+        transition: color 0.15s;
+      }
+      .clear-btn:hover { color: #ff453a; }
+
+      /* toast */
+      .toast {
+        position: fixed;
+        bottom: 24px;
+        left: 50%;
+        transform: translateX(-50%) translateY(80px);
+        padding: 10px 20px;
+        border-radius: 10px;
+        background: rgba(15, 15, 35, 0.95);
+        border: 1px solid rgba(255, 255, 255, 0.15);
+        color: #fff;
+        font: 500 13px/1 -apple-system, "SF Pro Display", "Segoe UI", system-ui, sans-serif;
+        opacity: 0;
+        transition: transform 0.3s, opacity 0.3s;
+        pointer-events: none;
+        z-index: 100;
+      }
+      .toast.show {
+        transform: translateX(-50%) translateY(0);
+        opacity: 1;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="shell">
+      <div class="top-bar">
+        <div class="brand">
+          <div>
+            <h1>Shadow <i>&middot;</i> Payloads</h1>
+            <div class="brand-sub">Manage cached payloads</div>
+          </div>
+        </div>
+        <a href="./" class="back-link">&larr; Back</a>
+      </div>
+
+      <div class="stats" id="stats">
+        <div class="stat">
+          <div class="stat-val" id="stat-cached">-</div>
+          <div class="stat-label">Cached</div>
+        </div>
+        <div class="stat">
+          <div class="stat-val" id="stat-custom">-</div>
+          <div class="stat-label">Custom</div>
+        </div>
+        <div class="stat">
+          <div class="stat-val" id="stat-size">-</div>
+          <div class="stat-label">Total Size</div>
+        </div>
+      </div>
+
+      <div class="section">
+        <div class="section-head">Bundled Payloads</div>
+        <div id="bundled-list"></div>
+        <button class="cache-all-btn" id="cache-all-btn">Cache All Bundled Payloads</button>
+      </div>
+
+      <div class="section">
+        <div class="section-head">Custom Payloads</div>
+        <div id="custom-list"></div>
+        <div class="upload-zone" id="upload-zone">
+          <div class="upload-zone-text">Tap to upload a .bin payload</div>
+          <div class="upload-zone-sub">Or drag &amp; drop a file here</div>
+        </div>
+        <input type="file" id="file-input" accept=".bin,.elf" />
+      </div>
+
+      <button class="clear-btn" id="clear-btn">Clear All Cached Payloads</button>
+    </div>
+
+    <div class="toast" id="toast"></div>
+
+    <script>
+    (function () {
+      var BUNDLED = [
+        { name: "GoldHEN", file: "payloads/goldhen.bin", desc: "HEN + FTP + debug + cheats" },
+        { name: "PS4-HEN", file: "payloads/hen.bin", desc: "Lightweight homebrew enabler" },
+        { name: "Disable Updates", file: "payloads/disable-updates.bin", desc: "Block system update downloads" },
+        { name: "Enable Updates", file: "payloads/enable-updates.bin", desc: "Restore system update downloads" },
+        { name: "Fan Threshold", file: "payloads/fan-threshold.bin", desc: "Lower fan activation temperature" },
+        { name: "Disable ASLR", file: "payloads/disable-aslr.bin", desc: "Turn off address randomization" }
+      ];
+
+      var DB_NAME = "shadow-payloads";
+      var STORE = "bins";
+      var CUSTOM_PREFIX = "custom/";
+      var db = null;
+
+      function openDB(cb) {
+        if (db) { cb(db); return; }
+        try {
+          var req = indexedDB.open(DB_NAME, 1);
+          req.onupgradeneeded = function () { req.result.createObjectStore(STORE); };
+          req.onsuccess = function () { db = req.result; cb(db); };
+          req.onerror = function () { cb(null); };
+        } catch (e) { cb(null); }
+      }
+
+      function getAllKeys(cb) {
+        openDB(function (d) {
+          if (!d) { cb([]); return; }
+          try {
+            var tx = d.transaction(STORE, "readonly");
+            var store = tx.objectStore(STORE);
+            var keys = [];
+            var cursor = store.openCursor();
+            cursor.onsuccess = function () {
+              var c = cursor.result;
+              if (c) {
+                keys.push({ key: c.key, size: c.value ? c.value.byteLength || 0 : 0 });
+                c.continue();
+              } else {
+                cb(keys);
+              }
+            };
+            cursor.onerror = function () { cb([]); };
+          } catch (e) { cb([]); }
+        });
+      }
+
+      function getEntry(key, cb) {
+        openDB(function (d) {
+          if (!d) { cb(null); return; }
+          try {
+            var tx = d.transaction(STORE, "readonly");
+            var req = tx.objectStore(STORE).get(key);
+            req.onsuccess = function () { cb(req.result || null); };
+            req.onerror = function () { cb(null); };
+          } catch (e) { cb(null); }
+        });
+      }
+
+      function putEntry(key, data, cb) {
+        openDB(function (d) {
+          if (!d) { if (cb) cb(false); return; }
+          try {
+            var tx = d.transaction(STORE, "readwrite");
+            tx.objectStore(STORE).put(data, key);
+            tx.oncomplete = function () { if (cb) cb(true); };
+            tx.onerror = function () { if (cb) cb(false); };
+          } catch (e) { if (cb) cb(false); }
+        });
+      }
+
+      function deleteEntry(key, cb) {
+        openDB(function (d) {
+          if (!d) { if (cb) cb(false); return; }
+          try {
+            var tx = d.transaction(STORE, "readwrite");
+            tx.objectStore(STORE).delete(key);
+            tx.oncomplete = function () { if (cb) cb(true); };
+            tx.onerror = function () { if (cb) cb(false); };
+          } catch (e) { if (cb) cb(false); }
+        });
+      }
+
+      function clearAll(cb) {
+        openDB(function (d) {
+          if (!d) { if (cb) cb(false); return; }
+          try {
+            var tx = d.transaction(STORE, "readwrite");
+            tx.objectStore(STORE).clear();
+            tx.oncomplete = function () { if (cb) cb(true); };
+            tx.onerror = function () { if (cb) cb(false); };
+          } catch (e) { if (cb) cb(false); }
+        });
+      }
+
+      function formatSize(bytes) {
+        if (bytes < 1024) return bytes + " B";
+        if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + " KB";
+        return (bytes / (1024 * 1024)).toFixed(1) + " MB";
+      }
+
+      var toastTimer = null;
+      function toast(msg) {
+        var el = document.getElementById("toast");
+        if (!el) return;
+        el.textContent = msg;
+        el.className = "toast show";
+        if (toastTimer) clearTimeout(toastTimer);
+        toastTimer = setTimeout(function () {
+          el.className = "toast";
+        }, 2500);
+      }
+
+      function refresh() {
+        getAllKeys(function (entries) {
+          var cachedCount = 0;
+          var customCount = 0;
+          var totalSize = 0;
+          var cachedMap = {};
+
+          for (var i = 0; i < entries.length; i++) {
+            cachedMap[entries[i].key] = entries[i].size;
+            totalSize += entries[i].size;
+            if (entries[i].key.indexOf(CUSTOM_PREFIX) === 0) {
+              customCount++;
+            } else {
+              cachedCount++;
+            }
+          }
+
+          var statCached = document.getElementById("stat-cached");
+          var statCustom = document.getElementById("stat-custom");
+          var statSize = document.getElementById("stat-size");
+          if (statCached) statCached.textContent = String(cachedCount);
+          if (statCustom) statCustom.textContent = String(customCount);
+          if (statSize) statSize.textContent = totalSize > 0 ? formatSize(totalSize) : "0 B";
+
+          renderBundled(cachedMap);
+          renderCustom(entries);
+        });
+      }
+
+      function renderBundled(cachedMap) {
+        var container = document.getElementById("bundled-list");
+        if (!container) return;
+        container.innerHTML = "";
+
+        for (var i = 0; i < BUNDLED.length; i++) {
+          (function (pl) {
+            var isCached = cachedMap[pl.file] !== undefined;
+            var size = cachedMap[pl.file] || 0;
+
+            var row = document.createElement("div");
+            row.className = "pl-row";
+
+            var icon = document.createElement("div");
+            icon.className = "pl-icon " + (isCached ? "cached" : "missing");
+            icon.textContent = isCached ? "✓" : "•";
+            row.appendChild(icon);
+
+            var info = document.createElement("div");
+            info.className = "pl-info";
+            var nameEl = document.createElement("div");
+            nameEl.className = "pl-name";
+            nameEl.textContent = pl.name;
+            info.appendChild(nameEl);
+            var detail = document.createElement("div");
+            detail.className = "pl-detail";
+            detail.textContent = isCached ? pl.desc + " · " + formatSize(size) : pl.desc + " · not cached";
+            info.appendChild(detail);
+            row.appendChild(info);
+
+            var actions = document.createElement("div");
+            actions.className = "pl-actions";
+
+            if (isCached) {
+              var delBtn = document.createElement("button");
+              delBtn.className = "pl-btn danger";
+              delBtn.textContent = "Remove";
+              delBtn.addEventListener("click", function () {
+                deleteEntry(pl.file, function (ok) {
+                  if (ok) toast("Removed " + pl.name);
+                  refresh();
+                });
+              });
+              actions.appendChild(delBtn);
+            } else {
+              var cacheBtn = document.createElement("button");
+              cacheBtn.className = "pl-btn";
+              cacheBtn.textContent = "Cache";
+              cacheBtn.addEventListener("click", function () {
+                cacheBtn.disabled = true;
+                cacheBtn.textContent = "...";
+                fetchAndCache(pl.file, function (ok) {
+                  if (ok) toast("Cached " + pl.name);
+                  else toast("Failed to cache " + pl.name);
+                  refresh();
+                });
+              });
+              actions.appendChild(cacheBtn);
+            }
+
+            row.appendChild(actions);
+            container.appendChild(row);
+          })(BUNDLED[i]);
+        }
+      }
+
+      function renderCustom(entries) {
+        var container = document.getElementById("custom-list");
+        if (!container) return;
+        container.innerHTML = "";
+
+        var customs = [];
+        for (var i = 0; i < entries.length; i++) {
+          if (entries[i].key.indexOf(CUSTOM_PREFIX) === 0) {
+            customs.push(entries[i]);
+          }
+        }
+
+        if (customs.length === 0) {
+          var empty = document.createElement("div");
+          empty.style.cssText = "text-align:center;padding:12px;color:rgba(255,255,255,0.30);font:400 12px/1.4 -apple-system,system-ui,sans-serif";
+          empty.textContent = "No custom payloads yet";
+          container.appendChild(empty);
+          return;
+        }
+
+        for (var j = 0; j < customs.length; j++) {
+          (function (entry) {
+            var displayName = entry.key.replace(CUSTOM_PREFIX, "");
+
+            var row = document.createElement("div");
+            row.className = "pl-row";
+
+            var icon = document.createElement("div");
+            icon.className = "pl-icon custom";
+            icon.textContent = "★";
+            row.appendChild(icon);
+
+            var info = document.createElement("div");
+            info.className = "pl-info";
+            var nameEl = document.createElement("div");
+            nameEl.className = "pl-name";
+            nameEl.textContent = displayName;
+            info.appendChild(nameEl);
+            var detail = document.createElement("div");
+            detail.className = "pl-detail";
+            detail.textContent = "Custom · " + formatSize(entry.size);
+            info.appendChild(detail);
+            row.appendChild(info);
+
+            var actions = document.createElement("div");
+            actions.className = "pl-actions";
+            var delBtn = document.createElement("button");
+            delBtn.className = "pl-btn danger";
+            delBtn.textContent = "Remove";
+            delBtn.addEventListener("click", function () {
+              deleteEntry(entry.key, function (ok) {
+                if (ok) toast("Removed " + displayName);
+                refresh();
+              });
+            });
+            actions.appendChild(delBtn);
+            row.appendChild(actions);
+
+            container.appendChild(row);
+          })(customs[j]);
+        }
+      }
+
+      function fetchAndCache(file, cb) {
+        try {
+          var xhr = new XMLHttpRequest();
+          xhr.open("GET", file, true);
+          xhr.responseType = "arraybuffer";
+          xhr.onload = function () {
+            if (xhr.status >= 200 && xhr.status < 300 && xhr.response) {
+              putEntry(file, xhr.response, cb);
+            } else {
+              cb(false);
+            }
+          };
+          xhr.onerror = function () { cb(false); };
+          xhr.send();
+        } catch (e) { cb(false); }
+      }
+
+      function handleFiles(files) {
+        if (!files || files.length === 0) return;
+        var pending = files.length;
+        for (var i = 0; i < files.length; i++) {
+          (function (file) {
+            var reader = new FileReader();
+            reader.onload = function () {
+              var key = CUSTOM_PREFIX + file.name;
+              putEntry(key, reader.result, function (ok) {
+                if (ok) toast("Added " + file.name);
+                pending--;
+                if (pending <= 0) refresh();
+              });
+            };
+            reader.onerror = function () {
+              toast("Failed to read " + file.name);
+              pending--;
+              if (pending <= 0) refresh();
+            };
+            reader.readAsArrayBuffer(file);
+          })(files[i]);
+        }
+      }
+
+      /* upload zone */
+      var uploadZone = document.getElementById("upload-zone");
+      var fileInput = document.getElementById("file-input");
+
+      if (uploadZone) {
+        uploadZone.addEventListener("click", function () {
+          if (fileInput) fileInput.click();
+        });
+        uploadZone.addEventListener("dragover", function (e) {
+          e.preventDefault();
+          uploadZone.className = "upload-zone dragover";
+        });
+        uploadZone.addEventListener("dragleave", function () {
+          uploadZone.className = "upload-zone";
+        });
+        uploadZone.addEventListener("drop", function (e) {
+          e.preventDefault();
+          uploadZone.className = "upload-zone";
+          handleFiles(e.dataTransfer.files);
+        });
+      }
+
+      if (fileInput) {
+        fileInput.addEventListener("change", function () {
+          handleFiles(fileInput.files);
+          fileInput.value = "";
+        });
+      }
+
+      /* cache all */
+      var cacheAllBtn = document.getElementById("cache-all-btn");
+      if (cacheAllBtn) {
+        cacheAllBtn.addEventListener("click", function () {
+          cacheAllBtn.disabled = true;
+          cacheAllBtn.textContent = "Caching...";
+          var left = BUNDLED.length;
+          for (var i = 0; i < BUNDLED.length; i++) {
+            (function (pl) {
+              fetchAndCache(pl.file, function () {
+                left--;
+                if (left <= 0) {
+                  toast("All bundled payloads cached");
+                  cacheAllBtn.disabled = false;
+                  cacheAllBtn.textContent = "Cache All Bundled Payloads";
+                  refresh();
+                }
+              });
+            })(BUNDLED[i]);
+          }
+        });
+      }
+
+      /* clear all */
+      var clearBtn = document.getElementById("clear-btn");
+      if (clearBtn) {
+        clearBtn.addEventListener("click", function () {
+          clearAll(function (ok) {
+            if (ok) toast("All payloads cleared");
+            refresh();
+          });
+        });
+      }
+
+      /* init */
+      refresh();
+    })();
+    </script>
+  </body>
+</html>
