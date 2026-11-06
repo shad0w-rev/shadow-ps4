@@ -566,7 +566,55 @@ function startExploit() {
     url = ex.runner + "?payload=" + encodeURIComponent(pl.file) + "&shadow=1";
   }
 
-  location.href = url;
+  showExploitFrame(url);
+}
+
+function showExploitFrame(url) {
+  var old = document.getElementById("exploit-overlay");
+  if (old) old.parentNode.removeChild(old);
+
+  var overlay = document.createElement("div");
+  overlay.id = "exploit-overlay";
+  overlay.style.cssText = "position:fixed;top:0;left:0;right:0;bottom:0;z-index:9999;background:#050510";
+
+  var frame = document.createElement("iframe");
+  frame.id = "exploit-frame";
+  frame.src = url;
+  frame.style.cssText = "width:100%;height:100%;border:none;display:block";
+  frame.setAttribute("allowfullscreen", "");
+  overlay.appendChild(frame);
+
+  var backBtn = document.createElement("button");
+  backBtn.id = "frame-back-btn";
+  backBtn.textContent = "← Back to Shadow";
+  backBtn.style.cssText = "position:fixed;bottom:16px;left:50%;transform:translateX(-50%);z-index:10000;padding:10px 20px;border-radius:20px;background:rgba(15,15,35,0.92);border:1px solid rgba(255,255,255,0.15);color:rgba(255,255,255,0.6);font:500 12px/1 -apple-system,system-ui,sans-serif;cursor:pointer";
+  backBtn.addEventListener("click", function () { closeExploitFrame(); });
+  overlay.appendChild(backBtn);
+
+  document.body.appendChild(overlay);
+  document.body.style.overflow = "hidden";
+}
+
+function closeExploitFrame() {
+  try {
+    var frame = document.getElementById("exploit-frame");
+    if (frame && frame.contentWindow) {
+      var fw = frame.contentWindow;
+      if (fw.__shadow || fw.document.body.className.indexOf("done") !== -1) {
+        isJailbroken = true;
+        try { sessionStorage.setItem(JB_KEY, String(Date.now())); } catch (e) {}
+      }
+      var ss = fw.sessionStorage;
+      if (ss && ss.getItem("shadow.jailbroken")) {
+        isJailbroken = true;
+        try { sessionStorage.setItem(JB_KEY, ss.getItem("shadow.jailbroken")); } catch (e) {}
+      }
+    }
+  } catch (e) {}
+  var overlay = document.getElementById("exploit-overlay");
+  if (overlay) overlay.parentNode.removeChild(overlay);
+  document.body.style.overflow = "";
+  renderAll();
 }
 
 function stopClock() {

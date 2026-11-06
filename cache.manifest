@@ -1,18 +1,119 @@
 CACHE MANIFEST
-# Shadow — Main landing page v16.0
+# Shadow — All-in-one v17.0
 
 CACHE:
+# Landing page
 index.html
 style.css
 shadow.js
 shadow.png
 payload-manager.html
+
+# Payloads
 payloads/goldhen.bin
 payloads/hen.bin
 payloads/disable-updates.bin
 payloads/enable-updates.bin
 payloads/fan-threshold.bin
 payloads/disable-aslr.bin
+
+# Afterglow (FW 11.00-14.00)
+exploits/afterglow/jb.html
+exploits/afterglow/jb.js
+exploits/afterglow/afterglow.js
+exploits/afterglow/core.js
+exploits/afterglow/int64.js
+exploits/afterglow/launch.js
+exploits/afterglow/mem.js
+exploits/afterglow/ps4_offsets.js
+exploits/afterglow/goldhen.bin
+exploits/afterglow/hen.bin
+exploits/afterglow/patchset-1352.bin
+exploits/afterglow/patchset-1400.bin
+
+# PSFree 9.00
+exploits/psfree900/index.html
+exploits/psfree900/alert.mjs
+exploits/psfree900/psfree.mjs
+exploits/psfree900/config.mjs
+exploits/psfree900/lapse.mjs
+exploits/psfree900/send.mjs
+exploits/psfree900/goldhen.bin
+exploits/psfree900/aio_patches.bin
+exploits/psfree900/fonts/LiberationMono-Regular.ttf
+exploits/psfree900/module/int64.mjs
+exploits/psfree900/module/memtools.mjs
+exploits/psfree900/module/rw.mjs
+exploits/psfree900/module/offset.mjs
+exploits/psfree900/module/view.mjs
+exploits/psfree900/module/utils.mjs
+exploits/psfree900/module/chain.mjs
+exploits/psfree900/module/mem.mjs
+exploits/psfree900/module/constants.mjs
+exploits/psfree900/rop/900.mjs
+
+# PSFree + Lapse (FW 7.00-9.60)
+exploits/psfree-lapse/index.html
+exploits/psfree-lapse/alert.mjs
+exploits/psfree-lapse/psfree.mjs
+exploits/psfree-lapse/config.mjs
+exploits/psfree-lapse/lapse.mjs
+exploits/psfree-lapse/send.mjs
+exploits/psfree-lapse/fonts/LiberationMono-Regular.ttf
+exploits/psfree-lapse/module/int64.mjs
+exploits/psfree-lapse/module/memtools.mjs
+exploits/psfree-lapse/module/rw.mjs
+exploits/psfree-lapse/module/offset.mjs
+exploits/psfree-lapse/module/view.mjs
+exploits/psfree-lapse/module/utils.mjs
+exploits/psfree-lapse/module/chain.mjs
+exploits/psfree-lapse/module/mem.mjs
+exploits/psfree-lapse/rop/ps4/700.mjs
+exploits/psfree-lapse/rop/ps4/750.mjs
+exploits/psfree-lapse/rop/ps4/800.mjs
+exploits/psfree-lapse/rop/ps4/850.mjs
+exploits/psfree-lapse/rop/ps4/900.mjs
+exploits/psfree-lapse/rop/ps4/950.mjs
+exploits/psfree-lapse/lapse/ps4/700.mjs
+exploits/psfree-lapse/lapse/ps4/750.mjs
+exploits/psfree-lapse/lapse/ps4/751.mjs
+exploits/psfree-lapse/lapse/ps4/800.mjs
+exploits/psfree-lapse/lapse/ps4/850.mjs
+exploits/psfree-lapse/lapse/ps4/852.mjs
+exploits/psfree-lapse/lapse/ps4/900.mjs
+exploits/psfree-lapse/lapse/ps4/903.mjs
+exploits/psfree-lapse/lapse/ps4/950.mjs
+
+# CSSFontFace (FW 6.00-11.02)
+exploits/cssfontface/index.html
+exploits/cssfontface/includes/cat.jpg
+exploits/cssfontface/includes/script.js
+exploits/cssfontface/includes/style.css
+exploits/cssfontface/src/lapse.js
+exploits/cssfontface/src/loader.js
+exploits/cssfontface/src/main.js
+exploits/cssfontface/src/misc.js
+exploits/cssfontface/src/netctrl.js
+exploits/cssfontface/src/worker.js
+exploits/cssfontface/src/workers.js
+exploits/cssfontface/src/ps4/constants.js
+exploits/cssfontface/src/ps4/kernel.js
+exploits/cssfontface/src/ps4/userland.js
+exploits/cssfontface/src/ps4/patches/600.bin
+exploits/cssfontface/src/ps4/patches/620.bin
+exploits/cssfontface/src/ps4/patches/650.bin
+exploits/cssfontface/src/ps4/patches/670.bin
+exploits/cssfontface/src/ps4/patches/700.bin
+exploits/cssfontface/src/ps4/patches/750.bin
+exploits/cssfontface/src/ps4/patches/800.bin
+exploits/cssfontface/src/ps4/patches/850.bin
+exploits/cssfontface/src/ps4/patches/900.bin
+exploits/cssfontface/src/ps4/patches/903.bin
+exploits/cssfontface/src/ps4/patches/950.bin
+exploits/cssfontface/src/ps4/patches/1000.bin
+exploits/cssfontface/src/ps4/patches/1050.bin
+exploits/cssfontface/src/ps4/patches/1100.bin
+exploits/cssfontface/src/ps4/patches/1102.bin
 
 NETWORK:
 *
